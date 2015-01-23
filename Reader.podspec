@@ -14,7 +14,7 @@ Pod::Spec.new do |s|
  s.requires_arc = true
  
  s.subspec 'PDFKitten' do |sp|
-   sp.source_files = 'PDFKitten/**/*.{h,m}'
+   sp.source_files = 'PDFKitten/**/*.{h,m,mm}'
    sp.requires_arc = false
  end
  
