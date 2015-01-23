@@ -154,7 +154,25 @@
 		markImageY = [UIImage imageNamed:@"Reader-Mark-Y"]; // Y image
 
 #endif // end of READER_BOOKMARKS Option
-
+        
+#if (READER_SEARCH == TRUE) // Option
+        
+        rightButtonX -= (iconButtonWidth + buttonSpacing); // Next position
+        
+        UIButton *searchButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        searchButton.frame = CGRectMake(rightButtonX, BUTTON_Y, iconButtonWidth, BUTTON_HEIGHT);
+        [searchButton setImage:[UIImage imageNamed:@"Reader-Search"] forState:UIControlStateNormal];
+        [searchButton addTarget:self action:@selector(searchButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
+        [searchButton setBackgroundImage:buttonH forState:UIControlStateHighlighted];
+        [searchButton setBackgroundImage:buttonN forState:UIControlStateNormal];
+        searchButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+        //printButton.backgroundColor = [UIColor grayColor];
+        searchButton.exclusiveTouch = YES;
+        
+        [self addSubview:searchButton]; titleWidth -= (iconButtonWidth + buttonSpacing);
+        
+#endif // end of READER_SEARCH Option
+    
 		if (document.canEmail == YES) // Document email enabled
 		{
 			if ([MFMailComposeViewController canSendMail] == YES) // Can email
@@ -341,6 +359,11 @@
 - (void)printButtonTapped:(UIButton *)button
 {
 	[delegate tappedInToolbar:self printButton:button];
+}
+
+- (void)searchButtonTapped:(UIButton *)button
+{
+    [delegate tappedInToolbar:self searchButton:button];
 }
 
 - (void)emailButtonTapped:(UIButton *)button

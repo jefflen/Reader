@@ -31,11 +31,12 @@
 #import "ReaderContentView.h"
 #import "ReaderThumbCache.h"
 #import "ReaderThumbQueue.h"
+#import "ReaderSearchViewController.h"
 
 #import <MessageUI/MessageUI.h>
 
 @interface ReaderViewController () <UIScrollViewDelegate, UIGestureRecognizerDelegate, MFMailComposeViewControllerDelegate, UIDocumentInteractionControllerDelegate,
-									ReaderMainToolbarDelegate, ReaderMainPagebarDelegate, ReaderContentViewDelegate, ThumbsViewControllerDelegate>
+									ReaderMainToolbarDelegate, ReaderMainPagebarDelegate, ReaderContentViewDelegate, ThumbsViewControllerDelegate, ReaderSearchViewDelegate>
 @end
 
 @implementation ReaderViewController
@@ -65,6 +66,10 @@
 	NSDate *lastHideTime;
 
 	BOOL ignoreDidScroll;
+    
+    UIPopoverController *searchPopoverController;
+    
+    NSDictionary *searchResults;
 }
 
 #pragma mark - Constants
@@ -135,6 +140,8 @@
 
 	ReaderContentView *contentView = [[ReaderContentView alloc] initWithFrame:viewRect fileURL:fileURL page:page password:phrase]; // ReaderContentView
 
+    [contentView setSearchResults:searchResults[@(page)]];
+    
 	contentView.message = self; [contentViews setObject:contentView forKey:[NSNumber numberWithInteger:page]]; [scrollView addSubview:contentView];
 
 	[contentView showPageThumb:fileURL page:page password:phrase guid:guid]; // Request page preview thumb
@@ -845,6 +852,22 @@
 #endif // end of READER_BOOKMARKS Option
 }
 
+- (void)tappedInToolbar:(ReaderMainToolbar *)toolbar searchButton:(UIButton *)button
+{
+#if (READER_SEARCH == TRUE) // Option
+    
+    if (!searchPopoverController) {
+        ReaderSearchViewController *tableViewController = [[ReaderSearchViewController alloc] initWithStyle:UITableViewStylePlain];
+        tableViewController.document = document;
+        tableViewController.delegate = self;
+        searchPopoverController  = [[UIPopoverController alloc] initWithContentViewController:tableViewController];
+        [searchPopoverController setPopoverContentSize:CGSizeMake(self.view.frame.size.width / 2.5f, self.view.frame.size.height / 2.5f)];
+    }
+    [searchPopoverController presentPopoverFromRect:button.frame inView:button.superview permittedArrowDirections:UIPopoverArrowDirectionUp animated:YES];
+    
+#endif // end of READER_SEARCH Option
+}
+
 #pragma mark - MFMailComposeViewControllerDelegate methods
 
 - (void)mailComposeController:(MFMailComposeViewController *)controller didFinishWithResult:(MFMailComposeResult)result error:(NSError *)error
@@ -888,6 +911,47 @@
 - (void)pagebar:(ReaderMainPagebar *)pagebar gotoPage:(NSInteger)page
 {
 	[self showDocumentPage:page];
+}
+
+#pragma mark - ReaderSearchViewDelegate methods
+
+- (void)searchViewController:(ReaderSearchViewController *)controller gotoPage:(NSInteger)page withSearchResults:(NSArray *)results
+{
+    [searchPopoverController dismissPopoverAnimated:YES];
+    [self showDocumentPage:page];
+    [contentViews enumerateKeysAndObjectsUsingBlock: // Enumerate content views
+     ^(NSNumber *key, ReaderContentView *contentView, BOOL *stop) {
+         if ([key integerValue] == page) [contentView setSearchResults:results];
+     }];
+}
+
+- (void)searchViewController:(ReaderSearchViewController *)controller gotoPage:(NSInteger)page
+{
+    [self showDocumentPage:page];
+}
+
+- (void)searchViewController:(ReaderSearchViewController *)controller producedSearchResults:(NSDictionary *)results
+{
+    searchResults = results;
+    
+    if (results) {
+        [contentViews enumerateKeysAndObjectsUsingBlock: // Enumerate content views
+         ^(NSNumber *key, ReaderContentView *contentView, BOOL *stop) {
+             
+             if ([results.allKeys containsObject:key]) {
+                 [contentView setSearchResults:results[key]];
+             }
+             else {
+                 [contentView setSearchResults:nil];
+             }
+         }];
+    }
+    else {
+        [contentViews enumerateKeysAndObjectsUsingBlock: // Enumerate content views
+         ^(NSNumber *key, ReaderContentView *contentView, BOOL *stop) {
+             [contentView setSearchResults:nil];
+         }];
+    }
 }
 
 #pragma mark - UIApplication notification methods

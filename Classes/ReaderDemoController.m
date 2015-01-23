@@ -174,7 +174,7 @@
 
 	NSArray *pdfs = [[NSBundle mainBundle] pathsForResourcesOfType:@"pdf" inDirectory:nil];
 
-	NSString *filePath = [pdfs firstObject]; assert(filePath != nil); // Path to first PDF file
+	NSString *filePath = [pdfs lastObject]; assert(filePath != nil); // Path to first PDF file
 
 	ReaderDocument *document = [ReaderDocument withDocumentFilePath:filePath password:phrase];
 

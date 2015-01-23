@@ -100,6 +100,13 @@ static inline CGFloat zoomScaleThatFits(CGSize target, CGSize source)
 
 #pragma mark - ReaderContentView instance methods
 
+- (void)setSearchResults:(NSArray *)searchResults
+{
+    _searchResults = searchResults;
+    [theContentPage setSearchResults:searchResults];
+    [theContentPage setNeedsDisplay];
+}
+
 - (void)updateMinimumMaximumZoom
 {
 	CGFloat zoomScale = zoomScaleThatFits(self.bounds.size, theContentPage.bounds.size);
